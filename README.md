@@ -1,2 +1,5 @@
 # Naive_bayes_n-gram_tf-idf
 EMAIL CLASSIFICATION USING MULTINOMIAL NAIVE BAYES WITH MODIFIED N-GRAM AND TF-IDF TECHNIQUES
+
+
+Naive Bayes is commonly used in conjunction with other techniques to improve the accuracy of categorization. N-Grams, which focuses on word sequences (like bigrams), is one such technique that aids in capturing the contextual relationships between words, claims Sharma (2019). The model's sequence-based analysis helps it better understand meaning beyond individual words. To improve categorization, TF-IDF (Term Frequency-Inverse Document Frequency) is another commonly used technique. TF-IDF identifies important phrases in a document by considering both the terms' uniqueness throughout the entire dataset and their frequency in the email. A promising method for increasing email classification accuracy is the integration of Multinomial Naive Bayes with N-Grams and TF-IDF algorithms, which will enable users to handle their inboxes more effectively and efficiently. The purpose of this study is to investigate how various techniques can be combined and how they affect the functionality of email classification systems.
