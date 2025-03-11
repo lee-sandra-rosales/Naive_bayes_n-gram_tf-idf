@@ -1,0 +1,97 @@
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, classification_report, confusion_matrix
+
+# Halimbawa ng text data at labels (1 = Positibo, 0 = Negatibo)
+texts = [
+    "I love machine learning",
+    "Natural language processing is amazing",
+    "I hate spam emails",
+    "This algorithm is terrible",
+    "The weather is great today",
+    "I am learning data science",
+    "Spam messages are annoying",
+    "I enjoy solving problems with algorithms"
+]
+labels = [1, 1, 0, 0, 1, 1, 0, 1]  # 1 = Positibo, 0 = Negatibo
+
+# Step 1: Preprocess ang text at i-convert sa TF-IDF features
+# Unigrams lang (ngram_range=(1, 1))
+vectorizer = TfidfVectorizer(ngram_range=(1, 1), stop_words='english', max_features=10)  # Unigrams lang
+
+X = vectorizer.fit_transform(texts)  # I-convert ang text data sa TF-IDF matrix
+print("Feature names (n-grams):", vectorizer.get_feature_names_out())
+
+# Step 2: I-split ang data sa training at test sets
+X_train, X_test, y_train, y_test = train_test_split(X, labels, test_size=0.3, random_state=42)
+
+# Step 3: Mag-train ng Naive Bayes classifier
+model = MultinomialNB()  # Hindi natin i-adjust ang smoothing parameter (alpha=1.0 by default)
+model.fit(X_train, y_train)
+
+# Step 4: Mag-predict sa test set
+y_pred = model.predict(X_test)
+
+# Step 5: I-evaluate ang model
+accuracy = accuracy_score(y_test, y_pred)
+precision = precision_score(y_test, y_pred)
+print("\nAccuracy:", accuracy)
+print("Precision:", precision)
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+# ----------------------------------------------
+# Now, let's improve the model by adjusting n-grams and alpha value
+# ----------------------------------------------
+
+# Using n-grams (1,2) - Unigrams at Bigrams
+vectorizer_improved = TfidfVectorizer(ngram_range=(1, 2), stop_words='english', max_features=10)
+
+X_improved = vectorizer_improved.fit_transform(texts)
+print("\nImproved Feature names (n-grams):", vectorizer_improved.get_feature_names_out())
+
+# Train-test split again with the new features
+X_train_improved, X_test_improved, y_train, y_test = train_test_split(X_improved, labels, test_size=0.3, random_state=42)
+
+# Apply Naive Bayes with different alpha (e.g., alpha=0.5)
+model_improved = MultinomialNB(alpha=0.5)
+model_improved.fit(X_train_improved, y_train)
+
+# Predict and evaluate the improved model
+y_pred_improved = model_improved.predict(X_test_improved)
+
+accuracy_improved = accuracy_score(y_test, y_pred_improved)
+precision_improved = precision_score(y_test, y_pred_improved)
+
+print("\nImproved Accuracy:", accuracy_improved)
+print("Improved Precision:", precision_improved)
+print("\nImproved Classification Report:\n", classification_report(y_test, y_pred_improved))
+
+# -----------------------------------------------
+# Visualization for Improved Model - Confusion Matrix Heatmap
+# -----------------------------------------------
+conf_matrix_improved = confusion_matrix(y_test, y_pred_improved)
+
+# Plotting confusion matrix for improved model
+plt.figure(figsize=(6, 5))
+sns.heatmap(conf_matrix_improved, annot=True, fmt="d", cmap="Blues", xticklabels=["Negatibo", "Positibo"], yticklabels=["Negatibo", "Positibo"])
+plt.title("Confusion Matrix - Improved Model (alpha=0.5)")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.show()
+
+# -----------------------------------------------
+# Bar Plot for Accuracy and Precision (Improved Model)
+# -----------------------------------------------
+metrics_improved = ['Accuracy', 'Precision']
+values_improved = [accuracy_improved, precision_improved]
+
+# Create a bar plot for improved model performance
+plt.figure(figsize=(8, 6))
+sns.barplot(x=metrics_improved, y=values_improved, palette="viridis")
+plt.title("Improved Model Performance: Accuracy vs Precision")
+plt.ylabel("Score")
+plt.show()
