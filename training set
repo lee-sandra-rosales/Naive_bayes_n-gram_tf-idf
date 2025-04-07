@@ -1,0 +1,94 @@
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+import time
+
+# Load CSV
+file_path = 'csv file'
+df = pd.read_csv(file_path)
+
+# Basic cleaning (common to both)
+df['Body'] = df['Body'].str.replace(r'http\S+', '', regex=True)
+df['Body'] = df['Body'].str.replace(r'[^a-zA-Z\s]', '', regex=True)
+
+# Create dummy labels for spam detection
+df['Label'] = df['Subject'].apply(lambda x: 1 if 'gift' in x.lower() or 'offer' in x.lower() else 0)
+
+texts = df['Body']
+labels = df['Label']
+
+# -----------------------------------------
+#  1. Traditional Naive Bayes
+# -----------------------------------------
+print("\n=== Traditional Naive Bayes ===\n")
+
+vectorizer_trad = TfidfVectorizer(stop_words='english', ngram_range=(1, 1))
+X_trad = vectorizer_trad.fit_transform(texts)
+X_train_trad, X_test_trad, y_train_trad, y_test_trad = train_test_split(X_trad, labels, test_size=0.3, random_state=42)
+
+model_trad = MultinomialNB()
+model_trad.fit(X_train_trad, y_train_trad)
+y_pred_trad = model_trad.predict(X_test_trad)
+
+accuracy_trad = accuracy_score(y_test_trad, y_pred_trad)
+precision_trad = precision_score(y_test_trad, y_pred_trad)
+
+print(f"Accuracy (Traditional): {accuracy_trad:.4f}")
+print(f"Precision (Traditional): {precision_trad:.4f}")
+
+# -----------------------------------------
+#  2. Modified Naive Bayes
+# -----------------------------------------
+print("\n=== Modified Naive Bayes ===\n")
+
+# Additional cleaning or filtering
+df['Body'] = df['Body'].str.lower()
+
+# Enhanced vectorizer (bigram + top 5000 features)
+vectorizer_mod = TfidfVectorizer(stop_words='english', ngram_range=(1, 2), max_features=5000)
+X_mod = vectorizer_mod.fit_transform(df['Body'])
+X_train_mod, X_test_mod, y_train_mod, y_test_mod = train_test_split(X_mod, labels, test_size=0.3, random_state=42)
+
+# Slight tuning of alpha
+model_mod = MultinomialNB(alpha=0.7)
+model_mod.fit(X_train_mod, y_train_mod)
+y_pred_mod = model_mod.predict(X_test_mod)
+
+accuracy_mod = accuracy_score(y_test_mod, y_pred_mod)
+precision_mod = precision_score(y_test_mod, y_pred_mod)
+
+print(f"Accuracy (Modified): {accuracy_mod:.4f}")
+print(f"Precision (Modified): {precision_mod:.4f}")
+
+# -----------------------------------------
+#  Comparison Summary
+# -----------------------------------------
+print("\n=== Comparison Summary ===")
+print(f"Traditional Accuracy: {accuracy_trad:.4f}, Precision: {precision_trad:.4f}")
+print(f"Modified Accuracy:   {accuracy_mod:.4f}, Precision: {precision_mod:.4f}")
+
+# Optional: Confusion matrix plot for both
+conf_matrix_trad = confusion_matrix(y_test_trad, y_pred_trad)
+conf_matrix_mod = confusion_matrix(y_test_mod, y_pred_mod)
+
+plt.figure(figsize=(12, 5))
+
+plt.subplot(1, 2, 1)
+sns.heatmap(conf_matrix_trad, annot=True, fmt="d", cmap="Reds", xticklabels=["Not Spam", "Spam"], yticklabels=["Not Spam", "Spam"])
+plt.title("Traditional NB Confusion Matrix")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+
+plt.subplot(1, 2, 2)
+sns.heatmap(conf_matrix_mod, annot=True, fmt="d", cmap="Greens", xticklabels=["Not Spam", "Spam"], yticklabels=["Not Spam", "Spam"])
+plt.title("Modified NB Confusion Matrix")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+
+plt.tight_layout()
+plt.show()
