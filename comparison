@@ -1,0 +1,134 @@
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+import time
+
+# Load CSV
+file_path = 'csv file'
+df = pd.read_csv(file_path)
+
+# Basic cleaning (applied to both models)
+df['Body'] = df['Body'].str.replace(r'http\S+', '', regex=True)
+df['Body'] = df['Body'].str.replace(r'[^a-zA-Z\s]', '', regex=True)
+
+# Create dummy labels (adjust as needed)
+df['Label'] = df['Subject'].apply(lambda x: 1 if 'gift' in x.lower() or 'offer' in x.lower() else 0)
+
+texts = df['Body']
+labels = df['Label']
+
+# ================================
+# 1. Traditional Naive Bayes
+# ================================
+print("\n=== Traditional Naive Bayes ===\n")
+
+start_time = time.time()
+vectorizer_trad = TfidfVectorizer(stop_words='english', ngram_range=(1, 1))  # O(N × M)
+X_trad = vectorizer_trad.fit_transform(texts)
+end_time = time.time()
+print(f"TF-IDF Vectorization Time (Traditional): {end_time - start_time:.4f} seconds [O(N × M)]")
+
+start_time = time.time()
+X_train_trad, X_test_trad, y_train_trad, y_test_trad = train_test_split(X_trad, labels, test_size=0.3, random_state=42)  # O(N)
+end_time = time.time()
+print(f"Train-Test Split Time (Traditional): {end_time - start_time:.4f} seconds [O(N)]")
+
+start_time = time.time()
+model_trad = MultinomialNB()
+model_trad.fit(X_train_trad, y_train_trad)  # O(N × M)
+end_time = time.time()
+print(f"Training Time (Traditional): {end_time - start_time:.4f} seconds [O(N × M)]")
+
+start_time = time.time()
+y_pred_trad = model_trad.predict(X_test_trad)  # O(M)
+end_time = time.time()
+print(f"Prediction Time (Traditional): {end_time - start_time:.4f} seconds [O(M)]")
+
+accuracy_trad = accuracy_score(y_test_trad, y_pred_trad)
+precision_trad = precision_score(y_test_trad, y_pred_trad)
+recall_trad = recall_score(y_test_trad, y_pred_trad)
+f1_trad = f1_score(y_test_trad, y_pred_trad)
+
+print(f"Accuracy (Traditional): {accuracy_trad:.4f}")
+print(f"Precision (Traditional): {precision_trad:.4f}")
+print(f"Recall (Traditional): {recall_trad:.4f}")
+print(f"F1-Score (Traditional): {f1_trad:.4f}")
+
+# ================================
+# 2. Modified Naive Bayes
+# ================================
+print("\n=== Modified Naive Bayes ===\n")
+
+# Additional cleaning
+df['Body'] = df['Body'].str.lower()
+
+start_time = time.time()
+vectorizer_mod = TfidfVectorizer(stop_words='english', ngram_range=(1, 2), max_features=5000)  # O(N × M)
+X_mod = vectorizer_mod.fit_transform(df['Body'])
+end_time = time.time()
+print(f"TF-IDF Vectorization Time (Modified): {end_time - start_time:.4f} seconds [O(N × M)]")
+
+start_time = time.time()
+X_train_mod, X_test_mod, y_train_mod, y_test_mod = train_test_split(X_mod, labels, test_size=0.3, random_state=42)  # O(N)
+end_time = time.time()
+print(f"Train-Test Split Time (Modified): {end_time - start_time:.4f} seconds [O(N)]")
+
+start_time = time.time()
+model_mod = MultinomialNB(alpha=0.7)
+model_mod.fit(X_train_mod, y_train_mod)  # O(N × M)
+end_time = time.time()
+print(f"Training Time (Modified): {end_time - start_time:.4f} seconds [O(N × M)]")
+
+start_time = time.time()
+y_pred_mod = model_mod.predict(X_test_mod)  # O(M)
+end_time = time.time()
+print(f"Prediction Time (Modified): {end_time - start_time:.4f} seconds [O(M)]")
+
+accuracy_mod = accuracy_score(y_test_mod, y_pred_mod)
+precision_mod = precision_score(y_test_mod, y_pred_mod)
+recall_mod = recall_score(y_test_mod, y_pred_mod)
+f1_mod = f1_score(y_test_mod, y_pred_mod)
+
+print(f"Accuracy (Modified): {accuracy_mod:.4f}")
+print(f"Precision (Modified): {precision_mod:.4f}")
+print(f"Recall (Modified): {recall_mod:.4f}")
+print(f"F1-Score (Modified): {f1_mod:.4f}")
+
+# ================================
+# Comparison Summary
+# ================================
+print("\n=== Comparison Summary ===")
+print(f"{'Metric':<15} | {'Traditional':<10} | {'Modified':<10}")
+print("-" * 40)
+print(f"{'Accuracy':<15} | {accuracy_trad:.4f}     | {accuracy_mod:.4f}")
+print(f"{'Precision':<15} | {precision_trad:.4f}     | {precision_mod:.4f}")
+print(f"{'Recall':<15} | {recall_trad:.4f}     | {recall_mod:.4f}")
+print(f"{'F1-Score':<15} | {f1_trad:.4f}     | {f1_mod:.4f}")
+
+# ================================
+# Confusion Matrix Plots
+# ================================
+conf_matrix_trad = confusion_matrix(y_test_trad, y_pred_trad)
+conf_matrix_mod = confusion_matrix(y_test_mod, y_pred_mod)
+
+plt.figure(figsize=(12, 5))
+
+plt.subplot(1, 2, 1)
+sns.heatmap(conf_matrix_trad, annot=True, fmt="d", cmap="Reds", xticklabels=["Not Spam", "Spam"], yticklabels=["Not Spam", "Spam"])
+plt.title("Traditional NB Confusion Matrix")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+
+plt.subplot(1, 2, 2)
+sns.heatmap(conf_matrix_mod, annot=True, fmt="d", cmap="Greens", xticklabels=["Not Spam", "Spam"], yticklabels=["Not Spam", "Spam"])
+plt.title("Modified NB Confusion Matrix")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+
+plt.tight_layout()
+plt.show()
