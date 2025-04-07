@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -7,78 +8,75 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, classification_report, confusion_matrix
 import time
 
-# Sample text data and labels (1 = Positive, 0 = Negative)
-texts = [
-    "I love machine learning",
-    "Natural language processing is amazing",
-    "I hate spam emails",
-    "This algorithm is terrible",
-    "The weather is great today",
-    "I am learning data science",
-    "Spam messages are annoying",
-    "I enjoy solving problems with algorithms"
-]
-labels = [1, 1, 0, 0, 1, 1, 0, 1]  # 1 = Positive, 0 = Negative
+# Step 1: Load the uncleaned email data from the CSV file
+file_path = 'csv file'  # Change this path to your file
+df = pd.read_csv(file_path)  # Use pd.read_csv for CSV files
 
-# Step 1: Convert text to TF-IDF features (O(N * M))
+# Step 2: Preprocess text data (cleaning the text)
+# You can add more preprocessing steps as needed (e.g., removing emails, URLs, or punctuation)
+df['Body'] = df['Body'].str.replace(r'http\S+', '', regex=True)  # Remove URLs
+df['Body'] = df['Body'].str.replace(r'[^a-zA-Z\s]', '', regex=True)  # Remove non-alphabetical characters
 
+# Step 3: Assume binary classification (Spam=1, Not Spam=0)
+# You need a label for spam (1) or not spam (0), here I'm creating dummy labels
+# You should define your own labels based on your dataset.
+df['Label'] = df['Subject'].apply(lambda x: 1 if 'gift' in x.lower() or 'offer' in x.lower() else 0)  # Example label assignment
+
+# Extract text data (emails) and labels
+texts = df['Body']
+labels = df['Label']
+
+# Step 4: Convert text to TF-IDF features (O(N * M))
 start_time = time.time()
-vectorizer = TfidfVectorizer(ngram_range=(1, 1), stop_words='english', max_features=10)
+vectorizer = TfidfVectorizer(ngram_range=(1, 2), stop_words='english')  # N-grams (1,2) for bigrams
 X = vectorizer.fit_transform(texts)
 end_time = time.time()
 
 print("Feature names (n-grams):", vectorizer.get_feature_names_out())
-
 print("Time Complexity of TF-IDF vectorization: O(N * M)")
-
 print("Execution Time:", end_time - start_time, "seconds\n")
 
-# Step 2: Split data into training and testing sets (O(N))
+# Step 5: Split data into training and testing sets (O(N))
 start_time = time.time()
 X_train, X_test, y_train, y_test = train_test_split(X, labels, test_size=0.3, random_state=42)
 end_time = time.time()
 
 print("Time Complexity of Train-Test Split: O(N)")
-
 print("Execution Time:", end_time - start_time, "seconds\n")
 
-# Step 3: Train Naïve Bayes classifier (O(N * M))
+# Step 6: Train Naïve Bayes classifier (O(N * M))
 start_time = time.time()
 model = MultinomialNB()
 model.fit(X_train, y_train)
 end_time = time.time()
 
 print("Time Complexity of Model Training: O(N * M)")
-
 print("Execution Time:", end_time - start_time, "seconds\n")
 
-# Step 4: Prediction on test set (O(M))
+# Step 7: Prediction on test set (O(M))
 start_time = time.time()
 y_pred = model.predict(X_test)
 end_time = time.time()
 
 print("Time Complexity of Prediction: O(M)")
-
 print("Execution Time:", end_time - start_time, "seconds\n")
 
-# Step 5: Model Evaluation (O(N))
+# Step 8: Model Evaluation (O(N))
 start_time = time.time()
 accuracy = accuracy_score(y_test, y_pred)
 precision = precision_score(y_test, y_pred)
 end_time = time.time()
 
 print("Time Complexity of Evaluation: O(N)")
-
 print("Execution Time:", end_time - start_time, "seconds\n")
 
 print("Accuracy:", accuracy)
-
 print("Precision:", precision)
 
 # Confusion Matrix Visualization (O(N))
 conf_matrix = confusion_matrix(y_test, y_pred)
 plt.figure(figsize=(6, 5))
-sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="Blues", xticklabels=["Negative", "Positive"], yticklabels=["Negative", "Positive"])
+sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="Blues", xticklabels=["Not Spam", "Spam"], yticklabels=["Not Spam", "Spam"])
 plt.title("Confusion Matrix")
 plt.xlabel("Predicted")
 plt.ylabel("Actual")
