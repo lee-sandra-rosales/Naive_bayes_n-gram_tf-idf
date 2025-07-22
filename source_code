@@ -25,20 +25,20 @@ print("\nLabel distribution:")
 print(df['Label'].value_counts())
 
 texts = df['Body']
-labels df['Label']
+labels = df['Label']
 
 # ===================================
 # 2. Modified Naive Bayes
 # ===================================
 print("\n== Modified Naive Bayes ===\n")
 
-df['Body'] = df['Body].str.lower()
+df['Body'] = df['Body'].str.lower()
 
 start_time = time.time()
 vectorizer_mod = TfidfVectorizer(stop_words='english', ngram_range=(1, 2), max_features=5000)
 X_mod = vectorizer_mod.fit_transform(df['Body'])
 end_time = time.time()
-print(f"TF-IDF Vectorization Time (Modified): {end_time start_time:.4f} seconds")
+print(f"TF-IDF Vectorization Time (Modified): {end_time - start_time:.4f} seconds")
 
 start_time = time.time()
 X_train_mod, X_test_mod, y_train_mod, y_test_mod = train_test_split(
@@ -56,11 +56,11 @@ print(f"Training Time (Modified): {end_time - start_time:.4f} seconds")
 start_time = time.time()
 y_pred_mod = model_mod.predict(X_test_mod)
 end_time = time.time()
-print(f"Prediction Time (Modified): {end_time start_time:.4f} seconds")
+print(f"Prediction Time (Modified): {end_time - start_time:.4f} seconds")
 
 accuracy_mod = accuracy_score(y_test_mod, y_pred_mod)
 precision_mod = precision_score(y_test_mod, y_pred_mod, zero_division=1)
-recall_mod recall_score(y_test_mod, y_pred_mod, zero_division=1)
+recall_mod = recall_score(y_test_mod, y_pred_mod, zero_division=1)
 f1_mod = f1_score(y_test_mod, y_pred_mod, zero_division=1)
 
 print(f"Accuracy (Modified): {accuracy_mod:.4f}")
@@ -76,7 +76,7 @@ print(f"{'Metric': <15} | {'Traditional': <10} | {'Modified': <10}")
 print("-" * 40)
 
 print(f"{'Accuracy': <15} | {accuracy_trad:.4f} | {accuracy_mod:.4f}")
-print(f"{'Precision': <15} | {precision_trad:.4f} | (precision_mod:.4f}")
+print(f"{'Precision': <15} | {precision_trad:.4f} | {precision_mod:.4f}")
 print(f"{'Recall' : <15} | {recall_trad:.4f} | {recall_mod:.4f}")
 print(f"{'F1-Score': <15} | {fl_trad:.4f} | {f1_mod:.4f}")
 
@@ -96,7 +96,7 @@ plt.xlabel("Predicted")
 plt.ylabel("Actual")
 
 plt.subplot(1, 2, 2)
-sns.heatmap(conf_matrix_mod, annot True, fmt="d", cmap="Greens", xticklabels=["Not Spam", "Spam"],
+sns.heatmap(conf_matrix_mod, annot=True, fmt="d", cmap="Greens", xticklabels=["Not Spam", "Spam"],
 yticklabels=["Not Spam", "Spam"])
 plt.title("Modified NB Confusion Matrix")
 plt.xlabel("Predicted")
