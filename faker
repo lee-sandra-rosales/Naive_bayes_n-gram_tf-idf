@@ -1,0 +1,76 @@
+import random
+import pandas as pd
+from faker import Faker
+import datetime
+
+def generate_random_email_dataset(num_records=1000, seed=42):
+    """
+    Generate a dataset of random email records with various attributes.
+
+    Args:
+        num_records (int): Number of email records to generate
+        seed (int): Random seed for reproducibility
+
+    Returns:
+        pandas.DataFrame: DataFrame containing the email dataset
+    """
+    fake = Faker()
+    Faker.seed(seed)
+    random.seed(seed)
+
+    # Common email domains
+    domains = [
+        'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'protonmail.com',
+        'aol.com', 'icloud.com', 'mail.com', 'zoho.com', 'yandex.com'
+    ]
+
+    # Email categories
+    categories = ['Personal', 'Work', 'Business', 'Temporary', 'Newsletter', 'Shopping']
+
+    # Generate random data
+    data = []
+    for _ in range(num_records):
+        first_name = fake.first_name()
+        last_name = fake.last_name()
+        username = (first_name.lower() + last_name.lower() +
+                    str(random.randint(0, 999))).replace("'", "")
+        domain = random.choice(domains)
+        email = f"{username}@{domain}"
+
+        created_date = fake.date_between(start_date='-5y', end_date='today')
+        last_used = fake.date_between(start_date=created_date, end_date='today')
+
+        record = {
+            'email_address': email,
+            'first_name': first_name,
+            'last_name': last_name,
+            'username': username,
+            'domain': domain,
+            'email_category': random.choice(categories),
+            'creation_date': created_date,
+            'last_used_date': last_used,
+            'is_active': random.choices([True, False], weights=[0.8, 0.2])[0],
+            'email_provider': domain.split('.')[0].capitalize(),
+            'has_been_compromised': random.choices([True, False], weights=[0.2, 0.8])[0],
+            'num_logins_last_month': random.randint(0, 100),
+            'country': fake.country_code()
+        }
+        data.append(record)
+
+    # Create DataFrame
+    df = pd.DataFrame(data)
+
+    # Add some missing values randomly
+    for col in ['first_name', 'last_name', 'country']:
+        df.loc[df.sample(frac=0.05, random_state=seed).index, col] = None
+
+    return df
+
+# Generate dataset
+email_dataset = generate_random_email_dataset(1000)
+
+# Save to CSV
+email_dataset.to_csv('random_email_dataset.csv', index=False)
+
+print("✅ Random email dataset generated and saved to 'random_email_dataset.csv'")
+print(email_dataset.head())
