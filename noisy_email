@@ -1,0 +1,135 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import (
+    accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+)
+import time
+import re
+
+# -----------------------------------------
+# 📥 Load Dataset
+# -----------------------------------------
+file_path = "random_email_dataset.xlsx"
+df = pd.read_excel(file_path)
+
+# Ensure columns exist
+if 'Subject' not in df.columns or 'Body' not in df.columns:
+    raise ValueError("❌ 'Subject' and 'Body' columns are required in the dataset.")
+
+# -----------------------------------------
+# 🧹 Basic Cleaning
+# -----------------------------------------
+def clean_text(text):
+    if pd.isnull(text):
+        return ""
+    text = re.sub(r"http\S+", "", str(text))                  # remove URLs
+    text = re.sub(r"[^a-zA-Z\s]", " ", text)                  # keep only letters and spaces
+    text = re.sub(r"\s+", " ", text).strip()                  # remove extra spaces
+    return text.lower()
+
+df["CleanBody"] = df["Body"].apply(clean_text)
+
+texts = df["CleanBody"]
+labels = df["Label"]
+
+# -----------------------------------------
+# 1️⃣ Traditional Naive Bayes
+# -----------------------------------------
+print("\n=== Traditional Naive Bayes ===\n")
+
+start_trad = time.time()
+
+vectorizer_trad = TfidfVectorizer(stop_words='english', ngram_range=(1, 1))
+X_trad = vectorizer_trad.fit_transform(texts)
+X_train_trad, X_test_trad, y_train_trad, y_test_trad = train_test_split(
+    X_trad, labels, test_size=0.3, random_state=42
+)
+
+model_trad = MultinomialNB()
+model_trad.fit(X_train_trad, y_train_trad)
+y_pred_trad = model_trad.predict(X_test_trad)
+
+end_trad = time.time()
+
+# Metrics
+accuracy_trad = accuracy_score(y_test_trad, y_pred_trad)
+precision_trad = precision_score(y_test_trad, y_pred_trad)
+recall_trad = recall_score(y_test_trad, y_pred_trad)
+f1_trad = f1_score(y_test_trad, y_pred_trad)
+
+print(f"Accuracy  : {accuracy_trad:.4f}")
+print(f"Precision : {precision_trad:.4f}")
+print(f"Recall    : {recall_trad:.4f}")
+print(f"F1 Score  : {f1_trad:.4f}")
+print(f"Time      : {end_trad - start_trad:.4f} sec")
+
+# -----------------------------------------
+# 2️⃣ Modified Naive Bayes (Bigram + TF-IDF + Alpha tuning)
+# -----------------------------------------
+print("\n=== Modified Naive Bayes ===\n")
+
+start_mod = time.time()
+
+vectorizer_mod = TfidfVectorizer(stop_words='english', ngram_range=(1, 2), max_features=5000)
+X_mod = vectorizer_mod.fit_transform(texts)
+X_train_mod, X_test_mod, y_train_mod, y_test_mod = train_test_split(
+    X_mod, labels, test_size=0.3, random_state=42
+)
+
+model_mod = MultinomialNB(alpha=0.5)
+model_mod.fit(X_train_mod, y_train_mod)
+y_pred_mod = model_mod.predict(X_test_mod)
+
+end_mod = time.time()
+
+# Metrics
+accuracy_mod = accuracy_score(y_test_mod, y_pred_mod)
+precision_mod = precision_score(y_test_mod, y_pred_mod)
+recall_mod = recall_score(y_test_mod, y_pred_mod)
+f1_mod = f1_score(y_test_mod, y_pred_mod)
+
+print(f"Accuracy  : {accuracy_mod:.4f}")
+print(f"Precision : {precision_mod:.4f}")
+print(f"Recall    : {recall_mod:.4f}")
+print(f"F1 Score  : {f1_mod:.4f}")
+print(f"Time      : {end_mod - start_mod:.4f} sec")
+
+# -----------------------------------------
+# 📊 Comparison Table
+# -----------------------------------------
+print("\n=== 📊 Comparison Summary ===")
+print(f"{'Metric':<10} | {'Traditional':<10} | {'Modified':<10}")
+print("-" * 35)
+print(f"{'Accuracy':<10} | {accuracy_trad:.4f}    | {accuracy_mod:.4f}")
+print(f"{'Precision':<10} | {precision_trad:.4f}    | {precision_mod:.4f}")
+print(f"{'Recall':<10} | {recall_trad:.4f}    | {recall_mod:.4f}")
+print(f"{'F1 Score':<10} | {f1_trad:.4f}    | {f1_mod:.4f}")
+print(f"{'Time (s)':<10} | {end_trad - start_trad:.2f}     | {end_mod - start_mod:.2f}")
+
+# -----------------------------------------
+# 🔍 Confusion Matrices
+# -----------------------------------------
+conf_matrix_trad = confusion_matrix(y_test_trad, y_pred_trad)
+conf_matrix_mod = confusion_matrix(y_test_mod, y_pred_mod)
+
+plt.figure(figsize=(12, 5))
+
+plt.subplot(1, 2, 1)
+sns.heatmap(conf_matrix_trad, annot=True, fmt="d", cmap="Reds", xticklabels=["Not Spam", "Spam"], yticklabels=["Not Spam", "Spam"])
+plt.title("Traditional Naive Bayes")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+
+plt.subplot(1, 2, 2)
+sns.heatmap(conf_matrix_mod, annot=True, fmt="d", cmap="Greens", xticklabels=["Not Spam", "Spam"], yticklabels=["Not Spam", "Spam"])
+plt.title("Modified Naive Bayes")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+
+plt.tight_layout()
+plt.show()
