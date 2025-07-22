@@ -64,9 +64,9 @@ recall_mod recall_score(y_test_mod, y_pred_mod, zero_division=1)
 f1_mod = f1_score(y_test_mod, y_pred_mod, zero_division=1)
 
 print(f"Accuracy (Modified): {accuracy_mod:.4f}")
-print(f"Precision (Modified): (precision_mod:.4f}")
+print(f"Precision (Modified): {precision_mod:.4f}")
 print(f"Recall (Modified): {recall_mod:.4f}")
-print(f"F1-Score (Modified): {f1_mod:.4f)")
+print(f"F1-Score (Modified): {f1_mod:.4f}")
 
 # ====================================
 # Comparison Summary
@@ -78,7 +78,7 @@ print("-" * 40)
 print(f"{'Accuracy': <15} | {accuracy_trad:.4f} | {accuracy_mod:.4f}")
 print(f"{'Precision': <15} | {precision_trad:.4f} | (precision_mod:.4f}")
 print(f"{'Recall' : <15} | {recall_trad:.4f} | {recall_mod:.4f}")
-print(f"{'F1-Score': <15) | {fl_trad:.4f} | {f1_mod:.4f)}")
+print(f"{'F1-Score': <15} | {fl_trad:.4f} | {f1_mod:.4f}")
 
 # ====================================
 # Confusion Matrix Plots
