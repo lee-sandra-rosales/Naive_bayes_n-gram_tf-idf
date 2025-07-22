@@ -42,7 +42,7 @@ print(f"TF-IDF Vectorization Time (Modified): {end_time start_time:.4f} seconds"
 
 start_time = time.time()
 X_train_mod, X_test_mod, y_train_mod, y_test_mod = train_test_split(
-   X_mod, labels, test_size=0.3, random_state=42, stratify=labels
+    X_mod, labels, test_size=0.3, random_state=42, stratify=labels
 )
 end_time = time.time()
 print(f"Train-Test Split Time (Modified): (end_time start_time:.4f) seconds")
